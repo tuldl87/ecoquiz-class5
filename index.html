@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>생태 & 환경 퀴즈 게임</title>
+  <style>
+    /* 기본 리셋, 화면 꽉 채우기 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #a8e6cf, #dcedc1);
+      color: #333;
+    }
+    #app {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+    header {
+      padding: 20px;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #2e7d32;
+    }
+    .quiz-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 20px;
+    }
+    .question-box {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      max-width: 600px;
+      width: 100%;
+      padding: 30px;
+      transition: transform 0.3s ease;
+    }
+    .question-box:hover {
+      transform: translateY(-4px);
+    }
+    .question-text {
+      font-size: 1.5rem;
+      margin-bottom: 24px;
+    }
+    .options {
+      list-style: none;
+    }
+    .options li {
+      margin-bottom: 16px;
+    }
+    .options button {
+      width: 100%;
+      padding: 14px 20px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      background: #e0f2f1;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .options button:hover {
+      background: #b2dfdb;
+    }
+    .options button.correct {
+      background: #a5d6a7;
+    }
+    .options button.wrong {
+      background: #ef9a9a;
+    }
+    .nav-buttons {
+      margin-top: 20px;
+      text-align: right;
+    }
+    .nav-buttons button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #66bb6a;
+      color: white;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .nav-buttons button:hover {
+      background: #57a05c;
+    }
+    footer {
+      padding: 12px;
+      text-align: center;
+      font-size: 0.9rem;
+      background: rgba(255,255,255,0.8);
+    }
+    .hidden {
+      display: none;
+    }
+    /* 간단한 페이드 애니메이션 */
+    .fade-enter {
+      opacity: 0;
+    }
+    .fade-enter-active {
+      opacity: 1;
+      transition: opacity 0.4s;
+    }
+    .fade-exit {
+      opacity: 1;
+    }
+    .fade-exit-active {
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header>생태 & 환경 퀴즈 게임</header>
+    <div class="quiz-container">
+      <div id="questionBox" class="question-box">
+        <div id="questionText" class="question-text"></div>
+        <ul id="optionsList" class="options"></ul>
+        <div class="nav-buttons">
+          <button id="nextBtn">다음 →</button>
+        </div>
+      </div>
+    </div>
+    <footer id="footerText">문제 1 / 10</footer>
+  </div>
+
+  <script>
+    // 퀴즈 문제 데이터 (예시)
+    const quizData = [
+      {
+        question: "탄소중립이란 무엇을 의미할까요?",
+        options: ["탄소 배출을 무시한다", "탄소 배출량을 줄이거나 상쇄한다", "탄소 배출을 무조건 늘린다", "탄소 배출을 숨긴다"],
+        answer: 1
+      },
+      {
+        question: "지구 온난화의 주요 원인은?",
+        options: ["자외선 증가", "메탄가스 배출", "화산 폭발", "지진 활동"],
+        answer: 1
+      },
+      {
+        question: "멸종 위기 동물이란?",
+        options: ["절대 멸종한 동물", "인간이 만든 동물", "남아 있는 개체가 매우 적은 동물", "모든 동물"],
+        answer: 2
+      },
+      // … (총 10문항을 여기에 추가) …
+      {
+        question: "사막화 방지에 도움이 되는 활동은?",
+        options: ["산림 파괴", "무분별한 방목", "식생 복원 작업", "토양 침식 방치"],
+        answer: 2
+      },
+      {
+        question: "지속 가능성(sustainability)의 3대 축이 아닌 것은?",
+        options: ["환경", "경제", "사회", "오락"],
+        answer: 3
+      },
+      {
+        question: "산림이 줄어들면 어떤 영향이 있을까요?",
+        options: ["이산화탄소 증가", "기후 안정", "생물 다양성 증가", "토양 비옥도 증가"],
+        answer: 0
+      },
+      {
+        question: "해양 플라스틱 문제 해결에 좋은 방법은?",
+        options: ["일회용 플라스틱 사용", "재활용 활성화", "바다에 버리기", "플라스틱 무시"],
+        answer: 1
+      },
+      {
+        question: "재생 가능 에너지 예시는?",
+        options: ["석탄", "석유", "태양광", "천연가스"],
+        answer: 2
+      },
+      {
+        question: "생태계란 무엇을 포함할까요?",
+        options: ["오직 식물", "식물 + 동물 + 환경 상호작용", "오직 동물", "오직 미생물"],
+        answer: 1
+      },
+      {
+        question: "기후 변화 적응(adaptation)이란?",
+        options: ["변화를 무시", "미래 변화에 대비해 조정", "기후 변화를 막기만 함", "기후 변화 악화"],
+        answer: 1
+      },
+    ];
+
+    let current = 0;
+    let score = 0;
+
+    const questionText = document.getElementById('questionText');
+    const optionsList = document.getElementById('optionsList');
+    const nextBtn = document.getElementById('nextBtn');
+    const footerText = document.getElementById('footerText');
+
+    function showQuestion(idx) {
+      const q = quizData[idx];
+      questionText.textContent = q.question;
+      optionsList.innerHTML = '';
+      q.options.forEach((opt, i) => {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.textContent = opt;
+        btn.addEventListener('click', () => handleOptionClick(i, btn));
+        li.appendChild(btn);
+        optionsList.appendChild(li);
+      });
+      footerText.textContent = `문제 ${idx + 1} / ${quizData.length}`;
+      nextBtn.disabled = true;
+    }
+
+    function handleOptionClick(choice, btn) {
+      const q = quizData[current];
+      const buttons = optionsList.querySelectorAll('button');
+      buttons.forEach(b => b.disabled = true);
+      if (choice === q.answer) {
+        btn.classList.add('correct');
+        score++;
+      } else {
+        btn.classList.add('wrong');
+        // 정답 버튼도 강조
+        buttons[q.answer].classList.add('correct');
+      }
+      nextBtn.disabled = false;
+    }
+
+    nextBtn.addEventListener('click', () => {
+      current++;
+      if (current < quizData.length) {
+        showQuestion(current);
+      } else {
+        showResult();
+      }
+    });
+
+    function showResult() {
+      const container = document.querySelector('.quiz-container');
+      container.innerHTML = `
+        <div class="question-box">
+          <div class="question-text">퀴즈 완료!</div>
+          <p>당신의 점수는 <strong>${score} / ${quizData.length}</strong> 입니다.</p>
+          <button id="retryBtn">다시 풀기</button>
+        </div>
+      `;
+      const retryBtn = document.getElementById('retryBtn');
+      retryBtn.addEventListener('click', () => {
+        current = 0;
+        score = 0;
+        // 다시 원래 UI 복구
+        container.innerHTML = `<div id="questionBox" class="question-box">
+          <div id="questionText" class="question-text"></div>
+          <ul id="optionsList" class="options"></ul>
+          <div class="nav-buttons">
+            <button id="nextBtn">다음 →</button>
+          </div>
+        </div>`;
+        // 다시 요소 참조 갱신
+        initReferences();
+        showQuestion(current);
+      });
+      footerText.textContent = '';
+    }
+
+    function initReferences() {
+      questionText = document.getElementById('questionText');
+      optionsList = document.getElementById('optionsList');
+      nextBtn = document.getElementById('nextBtn');
+      nextBtn.addEventListener('click', () => {
+        current++;
+        if (current < quizData.length) {
+          showQuestion(current);
+        } else {
+          showResult();
+        }
+      });
+    }
+
+    // 초기 화면 시작
+    showQuestion(current);
+  </script>
+</body>
+</html>
